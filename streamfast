@@ -1,0 +1,23 @@
+#!/bin/bash
+
+#g=smplayer k=mpv v=vlc
+PLAYER=k
+
+query=$(printf '%s' "$*" | tr ' ' '+' )
+movies=$(curl -s https://1337x.wtf/search/$query/1/ | grep -Eo "torrent\/[0-9]{7}\/[a-zA-Z0-9?%-]*/")
+
+index=1
+list=()
+while IFS= read -r el ; do
+el2=$(awk '{print substr($0, 17)}' <<< "$el")
+echo "[$index] $el2"
+index=$((index+1))
+list+=("$el")
+done <<< "$movies"
+
+echo ""
+read -e -p "Select: " num
+num=${num:-1}
+magnet=$(curl -s https://1337x.wtf/${list[$((num-1))]} | grep -m 1 -Po "magnet:\?xt=urn:btih:[a-zA-Z0-9]*")
+
+peerflix -$PLAYER $magnet
